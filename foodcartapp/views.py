@@ -1,5 +1,6 @@
 import json
 
+import phonenumbers
 from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework import status
@@ -66,21 +67,32 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     new_order_data = request.data
+
+    for param in ['products', 'firstname', 'lastname',
+                  'phonenumber', 'address']:
+        if param not in (new_order_data.keys()):
+            content = f'error: {param}: Обязательное поле.'
+            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+        elif not new_order_data[param] and param is not 'lastname':
+            content = f'error: {param}: Поле не может быть пустым.'
+            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+
     if not isinstance(new_order_data['products'], list):
         content = 'error: products: Ожидался list со значениями'
         return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    if new_order_data['products'] is None:
-        content = 'error: products: Это поле не может быть пустым.'
+    elif not phonenumbers.is_valid_number(new_order_data['phonenumber']):
+        content = 'error: phonenumber: Введен некорректный номер телефона.'
         return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    if not new_order_data['products']:
-        content = 'error: products: Список не может быть пустым.'
+    elif not isinstance(new_order_data['firstname'], str):
+        content = 'error: firstname: Это поле должно быть str.'
         return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    if 'products' not in new_order_data:
-        content = 'error: products: Обязательное поле.'
-        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+    for product in new_order_data['products']:
+        if not Product.objects.filter(pk=product['product']):
+            content = 'error: products: Нет продукта с таким индексом.'
+            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
 
     new_order, _ = Order.objects.get_or_create(
         customer_first_name=new_order_data['firstname'],
