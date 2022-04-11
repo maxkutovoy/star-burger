@@ -1,10 +1,10 @@
 import json
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 from django.http import JsonResponse
 from django.templatetags.static import static
-
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import Product
 from .models import Order
@@ -65,27 +65,36 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    try:
-        new_order_data = request.data
-        new_order, _ = Order.objects.get_or_create(
-            customer_first_name=new_order_data['firstname'],
-            customer_last_name=new_order_data['lastname'],
-            phone_number=new_order_data['phonenumber'],
-            address=new_order_data['address'],
-        )
-        for product in new_order_data['products']:
-            product_in_order = Product.objects.get(pk=product['product'])
-            ProductInOrder.objects.create(
-                order=new_order,
-                product=product_in_order,
-                quantity=product['quantity']
-            )
+    new_order_data = request.data
+    if not isinstance(new_order_data['products'], list):
+        content = 'error: products: Ожидался list со значениями'
+        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    except ValueError:
-        return JsonResponse({
-            'error': 'Error',
-        })
-    return Response(new_order_data)
+    if new_order_data['products'] is None:
+        content = 'error: products: Это поле не может быть пустым.'
+        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    if not new_order_data['products']:
+        content = 'error: products: Список не может быть пустым.'
+        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    if 'products' not in new_order_data:
+        content = 'error: products: Обязательное поле.'
+        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    new_order, _ = Order.objects.get_or_create(
+        customer_first_name=new_order_data['firstname'],
+        customer_last_name=new_order_data['lastname'],
+        phone_number=new_order_data['phonenumber'],
+        address=new_order_data['address'],
+    )
+    for product in new_order_data['products']:
+        product_in_order = Product.objects.get(pk=product['product'])
+        ProductInOrder.objects.create(
+            order=new_order,
+            product=product_in_order,
+            quantity=product['quantity']
+        )
 
 # {
 # 'products': [
