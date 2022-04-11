@@ -1,4 +1,6 @@
 import json
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from django.http import JsonResponse
 from django.templatetags.static import static
@@ -61,9 +63,10 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
 def register_order(request):
     try:
-        new_order_data = json.loads(request.body.decode())
+        new_order_data = request.data
         new_order, _ = Order.objects.get_or_create(
             customer_first_name=new_order_data['firstname'],
             customer_last_name=new_order_data['lastname'],
@@ -82,7 +85,7 @@ def register_order(request):
         return JsonResponse({
             'error': 'Error',
         })
-    return JsonResponse({})
+    return Response(new_order_data)
 
 # {
 # 'products': [
