@@ -113,9 +113,9 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'pk',
         'order_time',
-        'customer_first_name',
-        'customer_last_name',
-        'phone_number'
+        'firstname',
+        'lastname',
+        'phonenumber'
     ]
     inlines = [
         ProductInOrderInLine

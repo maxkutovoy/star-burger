@@ -5,11 +5,58 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.serializers import Serializer, ModelSerializer
+from rest_framework.serializers import ValidationError
+from rest_framework.serializers import CharField, IntegerField
 from rest_framework.response import Response
 
 from .models import Product
 from .models import Order
 from .models import ProductInOrder
+
+
+class ProductInOrderSerializer(Serializer):
+    product = IntegerField()
+    quantity = IntegerField()
+
+    def validate_product(self, value):
+        if not value:
+            return 'Error'
+        return value
+
+
+class OrderSerializer(ModelSerializer):
+    products = ProductInOrderSerializer(many=True)
+
+    def validate_products(self, value):
+        if not value:
+            raise ValidationError(
+                'error: products: Список продуктов не может быть пустым.'
+            )
+        elif not any(
+            Product.objects.filter(pk=product['product']) for product in value
+        ):
+            raise ValidationError(
+                'error: products: Недопустимый первичный ключ.'
+            )
+        return value
+
+    class Meta:
+        model = Order
+        fields = [
+            'firstname',
+            'lastname',
+            'phonenumber',
+            'address',
+            'products',
+        ]
+
+        def validate_phone_number(self, value):
+            if not phonenumbers.is_valid_number(value):
+                raise ValidationError(
+                    'error: phonenumber: Введен некорректный номер телефона.'
+                )
+            return value
 
 
 def banners_list_api(request):
@@ -68,33 +115,10 @@ def product_list_api(request):
 def register_order(request):
     new_order_data = request.data
 
-    for param in ['products', 'firstname', 'lastname',
-                  'phonenumber', 'address']:
-        if param not in (new_order_data.keys()):
-            content = f'error: {param}: Обязательное поле.'
-            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
-        elif not new_order_data[param] and param is not 'lastname':
-            content = f'error: {param}: Поле не может быть пустым.'
-            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
+    serializer = OrderSerializer(data=new_order_data)
+    serializer.is_valid(raise_exception=True)
 
-    if not isinstance(new_order_data['products'], list):
-        content = 'error: products: Ожидался list со значениями'
-        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    elif not phonenumbers.is_valid_number(new_order_data['phonenumber']):
-        content = 'error: phonenumber: Введен некорректный номер телефона.'
-        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    elif not isinstance(new_order_data['firstname'], str):
-        content = 'error: firstname: Это поле должно быть str.'
-        return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    for product in new_order_data['products']:
-        if not Product.objects.filter(pk=product['product']):
-            content = 'error: products: Нет продукта с таким индексом.'
-            return Response(content, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    new_order, _ = Order.objects.get_or_create(
+    new_order = Order.objects.create(
         customer_first_name=new_order_data['firstname'],
         customer_last_name=new_order_data['lastname'],
         phone_number=new_order_data['phonenumber'],
@@ -107,7 +131,8 @@ def register_order(request):
             product=product_in_order,
             quantity=product['quantity']
         )
-
+    content = 'OK'
+    return Response(content)
 # {
 # 'products': [
 #   {
