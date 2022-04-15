@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.serializers import Serializer, ModelSerializer
 from rest_framework.serializers import ValidationError
 from rest_framework.serializers import CharField, IntegerField
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from .models import Product
@@ -26,7 +27,7 @@ class ProductInOrderSerializer(Serializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = ProductInOrderSerializer(many=True)
+    products = ProductInOrderSerializer(many=True, write_only=True)
 
     def validate_products(self, value):
         if not value:
@@ -119,20 +120,22 @@ def register_order(request):
     serializer.is_valid(raise_exception=True)
 
     new_order = Order.objects.create(
-        customer_first_name=new_order_data['firstname'],
-        customer_last_name=new_order_data['lastname'],
-        phone_number=new_order_data['phonenumber'],
-        address=new_order_data['address'],
+        firstname=serializer.validated_data['firstname'],
+        lastname=serializer.validated_data['lastname'],
+        phonenumber=serializer.validated_data['phonenumber'],
+        address=serializer.validated_data['address'],
     )
-    for product in new_order_data['products']:
+    for product in serializer.validated_data['products']:
         product_in_order = Product.objects.get(pk=product['product'])
         ProductInOrder.objects.create(
             order=new_order,
             product=product_in_order,
             quantity=product['quantity']
         )
-    content = 'OK'
-    return Response(content)
+
+    return Response(serializer.data)
+
+
 # {
 # 'products': [
 #   {
