@@ -1,4 +1,5 @@
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, F
 from django.core.validators import MinValueValidator
@@ -189,12 +190,14 @@ class ProductInOrder(models.Model):
 
     quantity = models.PositiveSmallIntegerField(
         'количество',
+        validators=[MinValueValidator(1)],
     )
 
     products_price = models.DecimalField(
         decimal_places=2,
         max_digits=5,
         verbose_name='общая стоимость блюд',
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
