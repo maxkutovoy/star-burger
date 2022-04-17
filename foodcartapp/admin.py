@@ -119,7 +119,8 @@ class OrderAdmin(admin.ModelAdmin):
         'order_time',
         'firstname',
         'lastname',
-        'phonenumber'
+        'phonenumber',
+        'comment'
     ]
     inlines = [
         ProductInOrderInLine
