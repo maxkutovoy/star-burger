@@ -122,6 +122,7 @@ class OrderAdmin(admin.ModelAdmin):
         'phonenumber',
         'comment'
     ]
+    readonly_fields = ['order_time']
     inlines = [
         ProductInOrderInLine
     ]
