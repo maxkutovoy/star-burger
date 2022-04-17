@@ -48,10 +48,12 @@ class OrderSerializer(ModelSerializer):
         fields = [
             'id',
             'status',
+            'payment_form',
             'firstname',
             'lastname',
             'phonenumber',
             'address',
+            'comment'
             'products',
         ]
 

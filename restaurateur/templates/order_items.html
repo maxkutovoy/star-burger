@@ -15,10 +15,12 @@
     <tr>
       <th>ID заказа</th>
       <th>Статус заказа</th>
+      <th>Форма оплаты</th>
       <th>Клиент</th>
       <th>Стоимость заказа</th>
       <th>Телефон</th>
       <th>Адрес доставки</th>
+      <th>Комментарий</th>
       <th>Ссылка на админку</th>
     </tr>
 
@@ -26,10 +28,20 @@
       <tr>
         <td>{{ item.pk }}</td>
         <td>{{ item.get_status_display }}</td>
+        {% if item.payment_form %}
+          <td>{{ item.get_payment_form_display }}</td>
+        {% else %}
+          <td>-</td>
+        {% endif %}
         <td>{{ item.firstname }} {{ item.lastname }}</td>
         <td>{{ item.total_order_price }}</td>
         <td>{{ item.phonenumber }}</td>
         <td>{{ item.address }}</td>
+        {% if item.comment %}
+          <td>{{ item.comment }}</td>
+        {% else %}
+          <td>-</td>
+        {% endif %}
         <td><a href="{% url 'admin:foodcartapp_order_change' object_id=item.pk %}?next={{ request.get_full_path|urlencode }}">Редактировать</a> </td>
       </tr>
     {% endfor %}

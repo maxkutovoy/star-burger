@@ -143,6 +143,12 @@ class Order(models.Model):
         ('completed_order', 'завершен'),
     ]
 
+    payment_forms = [
+        ('cash', 'наличными курьеру'),
+        ('card', 'картой курьеру'),
+        ('site', 'сразу на сайте'),
+    ]
+
     firstname = models.CharField(
         'имя клиента',
         max_length=200,
@@ -166,9 +172,17 @@ class Order(models.Model):
 
     status = models.CharField(
         'статус заказа',
-        max_length=200,
+        max_length=50,
         choices=order_statuses,
         default='new_order',
+        db_index=True,
+    )
+
+    payment_form = models.CharField(
+        'форма оплаты',
+        max_length=50,
+        choices=payment_forms,
+        null=True,
         db_index=True,
     )
 
