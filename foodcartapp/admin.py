@@ -115,6 +115,7 @@ class ProductAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'pk',
+        'status',
         'order_time',
         'firstname',
         'lastname',

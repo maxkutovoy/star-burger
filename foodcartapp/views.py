@@ -47,6 +47,7 @@ class OrderSerializer(ModelSerializer):
         model = Order
         fields = [
             'id',
+            'status',
             'firstname',
             'lastname',
             'phonenumber',
@@ -137,6 +138,7 @@ def register_order(request):
             products_price=product_in_order.price * product['quantity']
         )
 
+    print()
     serializer = OrderSerializer(new_order)
 
     return Response(serializer.data)

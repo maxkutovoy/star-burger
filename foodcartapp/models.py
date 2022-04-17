@@ -137,6 +137,11 @@ class OrderQuerySet(models.QuerySet):
 
 
 class Order(models.Model):
+    order_statuses = [
+        ('new_order', 'в работе'),
+        ('completed_order', 'завершен'),
+    ]
+
     firstname = models.CharField(
         'имя клиента',
         max_length=200,
@@ -161,6 +166,13 @@ class Order(models.Model):
     order_time = models.DateTimeField(
         'время создания заказа',
         auto_now_add=True,
+    )
+
+    status = models.CharField(
+        'статус заказа',
+        max_length=200,
+        choices=order_statuses,
+        default='new_order'
     )
 
     objects = OrderQuerySet.as_manager()
