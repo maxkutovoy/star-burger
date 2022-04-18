@@ -170,6 +170,13 @@ class Order(models.Model):
         max_length=200,
     )
 
+    restaurant = models.ForeignKey(
+        Restaurant,
+        verbose_name='ресторан доставки',
+        related_name='orders',
+        on_delete=models.DO_NOTHING,
+    )
+
     status = models.CharField(
         'статус заказа',
         max_length=50,
@@ -213,6 +220,26 @@ class Order(models.Model):
     )
 
     objects = OrderQuerySet.as_manager()
+
+    def available_restaurants(self):
+        products = self.products_in_order.all()
+        available_restaurants = []
+
+        for product_in_order in products:
+            restaurants = []
+            restaurant_menu_items = RestaurantMenuItem.objects.select_related('restaurant', 'product').filter(
+                product=product_in_order.product)
+
+            for restaurant in restaurant_menu_items:
+                restaurants.append(restaurant.restaurant)
+            if not available_restaurants:
+                available_restaurants = restaurants
+            else:
+                for restaurant in available_restaurants:
+                    if restaurant not in restaurants:
+                        available_restaurants.remove(restaurant)
+
+        return available_restaurants
 
     class Meta:
         verbose_name = 'заказ'

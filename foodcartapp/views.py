@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from .models import Product
 from .models import Order
 from .models import ProductInOrder
+from .models import RestaurantMenuItem
 
 
 class ProductInOrderSerializer(Serializer):
@@ -131,6 +132,7 @@ def register_order(request):
         phonenumber=serializer.validated_data['phonenumber'],
         address=serializer.validated_data['address'],
     )
+
     for product in serializer.validated_data['products']:
         product_in_order = Product.objects.get(pk=product['product'])
         ProductInOrder.objects.create(
@@ -140,9 +142,7 @@ def register_order(request):
             products_price=product_in_order.price * product['quantity']
         )
 
-    print()
     serializer = OrderSerializer(new_order)
-
     return Response(serializer.data)
 
 
