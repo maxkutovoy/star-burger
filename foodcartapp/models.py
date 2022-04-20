@@ -3,13 +3,16 @@ from operator import itemgetter
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, F
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from geopy import distance
 from phonenumber_field.modelfields import PhoneNumberField
 
 from .coordinates_utils import fetch_coordinates
+from places.models import Place
 from star_burger import settings
+
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -39,8 +42,8 @@ class ProductQuerySet(models.QuerySet):
     def available(self):
         products = (
             RestaurantMenuItem.objects
-            .filter(availability=True)
-            .values_list('product')
+                .filter(availability=True)
+                .values_list('product')
         )
         return self.filter(pk__in=products)
 
@@ -232,11 +235,13 @@ class Order(models.Model):
 
         for product_in_order in products:
             restaurants = []
-            restaurant_menu_items = RestaurantMenuItem.objects.select_related('restaurant', 'product').filter(
-                product=product_in_order.product)
+            restaurant_menu_items = RestaurantMenuItem.objects.\
+                select_related('restaurant', 'product').\
+                filter(product=product_in_order.product)
 
             for restaurant in restaurant_menu_items:
                 restaurants.append(restaurant.restaurant)
+
             if not available_restaurants:
                 available_restaurants = restaurants
             else:
@@ -246,19 +251,38 @@ class Order(models.Model):
 
         restaurants_with_distance = []
         for restaurant in available_restaurants:
-            rest_lon, rest_lat = fetch_coordinates(
-                apikey=settings.YANDEX_API_KEY,
-                address=restaurant.address,
-            )
+            try:
+                restaurant_coordinates = Place.objects.get(
+                    address=restaurant.address
+                )
+            except Place.DoesNotExist:
+                rest_lon, rest_lat = fetch_coordinates(
+                    apikey=settings.YANDEX_API_KEY,
+                    address=restaurant.address,
+                )
+                restaurant_coordinates = Place.objects.create(
+                    address=restaurant.address,
+                    lat=rest_lat,
+                    lon=rest_lon
+                )
 
-            client_lon, client_lat = fetch_coordinates(
-                apikey=settings.YANDEX_API_KEY,
-                address=self.address,
-            )
+            try:
+                client_coordinates = Place.objects.get(address=self.address)
+            except Place.DoesNotExist:
+                client_lon, client_lat = fetch_coordinates(
+                    apikey=settings.YANDEX_API_KEY,
+                    address=self.address,
+                )
+
+                client_coordinates = Place.objects.create(
+                    address=self.address,
+                    lat=client_lat,
+                    lon=client_lon,
+                )
 
             delivery_distance = round(distance.distance(
-                (rest_lat, rest_lon),
-                (client_lat, client_lon),
+                (restaurant_coordinates.lat, restaurant_coordinates.lon),
+                (client_coordinates.lat, client_coordinates.lon),
             ).km, 2)
 
             restaurants_with_distance.append(
