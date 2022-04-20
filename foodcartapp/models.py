@@ -243,11 +243,13 @@ class Order(models.Model):
                 restaurants.append(restaurant.restaurant)
 
             if not available_restaurants:
-                available_restaurants = restaurants
+                available_restaurants = set(restaurants)
             else:
-                for restaurant in available_restaurants:
-                    if restaurant not in restaurants:
-                        available_restaurants.remove(restaurant)
+                available_restaurants = available_restaurants.intersection(
+                    set(restaurants)
+                )
+                if not available_restaurants:
+                    return None
 
         restaurants_with_distance = []
         for restaurant in available_restaurants:

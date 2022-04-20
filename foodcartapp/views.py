@@ -144,20 +144,3 @@ def register_order(request):
 
     serializer = OrderSerializer(new_order)
     return Response(serializer.data)
-
-
-# {
-# 'products': [
-#   {
-#       'product': 2,
-#       'quantity': 1
-#   },
-#   {
-#       'product': 3,
-#       'quantity': 1
-#    }
-# ],
-# 'firstname': 'Максим',
-# 'lastname': 'К',
-# 'phonenumber': '+7 999 666 55 44',
-# 'address': 'Омск'}
