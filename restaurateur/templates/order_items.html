@@ -49,7 +49,7 @@
           <details>
             <summary>Развернуть</summary>
             {% for restaurant in item.available_restaurants %}
-             <p>{{ restaurant }}</p>
+             <p>{{ restaurant.0 }} - {{ restaurant.1 }} км</p>
             {% endfor %}
           </details>
         </td>

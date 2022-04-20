@@ -1,10 +1,15 @@
-from phonenumber_field.modelfields import PhoneNumberField
+from operator import itemgetter
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, F
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from geopy import distance
+from phonenumber_field.modelfields import PhoneNumberField
 
+from .coordinates_utils import fetch_coordinates
+from star_burger import settings
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -239,7 +244,28 @@ class Order(models.Model):
                     if restaurant not in restaurants:
                         available_restaurants.remove(restaurant)
 
-        return available_restaurants
+        restaurants_with_distance = []
+        for restaurant in available_restaurants:
+            rest_lon, rest_lat = fetch_coordinates(
+                apikey=settings.YANDEX_API_KEY,
+                address=restaurant.address,
+            )
+
+            client_lon, client_lat = fetch_coordinates(
+                apikey=settings.YANDEX_API_KEY,
+                address=self.address,
+            )
+
+            delivery_distance = round(distance.distance(
+                (rest_lat, rest_lon),
+                (client_lat, client_lon),
+            ).km, 2)
+
+            restaurants_with_distance.append(
+                (restaurant.name, delivery_distance)
+            )
+
+        return sorted(restaurants_with_distance, key=itemgetter(1))
 
     class Meta:
         verbose_name = 'заказ'
