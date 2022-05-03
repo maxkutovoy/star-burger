@@ -170,6 +170,7 @@ class Order(models.Model):
 
     phonenumber = PhoneNumberField(
         'номер клиента',
+        db_index=True,
     )
 
     address = models.CharField(
