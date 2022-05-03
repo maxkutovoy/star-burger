@@ -136,7 +136,7 @@ class RestaurantMenuItem(models.Model):
 
 
 class OrderQuerySet(models.QuerySet):
-    def order_price(self):
+    def calculate_order_price(self):
         order_price = self.annotate(
             total_order_price=Sum(
                 F('products_in_order__products_price'),
@@ -229,7 +229,7 @@ class Order(models.Model):
 
     objects = OrderQuerySet.as_manager()
 
-    def available_restaurants(self):
+    def get_available_restaurants(self):
         products = self.products_in_order.all()
         available_restaurants = []
 
