@@ -165,8 +165,7 @@ class Order(models.Model):
     lastname = models.CharField(
         'фамилия клиента',
         max_length=200,
-        blank=True,
-        null=True,
+        default='',
     )
 
     phonenumber = PhoneNumberField(
@@ -203,8 +202,7 @@ class Order(models.Model):
 
     comment = models.TextField(
         'комментарий к заказу',
-        blank=True,
-        null=True,
+        default='',
     )
 
     order_time = models.DateTimeField(
