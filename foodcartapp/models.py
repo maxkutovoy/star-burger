@@ -315,7 +315,7 @@ class ProductInOrder(models.Model):
     product = models.ForeignKey(
         Product,
         on_delete=models.DO_NOTHING,
-        related_name='orders_with_product',
+        related_name='products_in_order',
         verbose_name='продукт в заказе'
     )
 
