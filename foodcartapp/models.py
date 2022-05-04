@@ -1,15 +1,13 @@
 from operator import itemgetter
 
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, F
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from geopy import distance
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .coordinates_utils import fetch_coordinates
+from places.coordinates_utils import fetch_coordinates
 from places.models import Place
 from django.conf import settings
 
