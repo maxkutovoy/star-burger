@@ -11,7 +11,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from .coordinates_utils import fetch_coordinates
 from places.models import Place
-from star_burger import settings
+from django.conf import settings
 
 
 class Restaurant(models.Model):
