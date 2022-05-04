@@ -46,10 +46,10 @@
         {% endif %}
 
         <td>
-          {% if item.available_restaurants %}
+          {% if item.restaurants %}
           <details>
             <summary>Развернуть</summary>
-            {% for restaurant in item.available_restaurants %}
+            {% for restaurant in item.restaurants %}
               <p>{{ restaurant.0 }} - {{ restaurant.1 }} км</p>
             {% endfor %}
           </details>

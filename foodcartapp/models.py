@@ -109,7 +109,7 @@ class RestaurantMenuItem(models.Model):
     restaurant = models.ForeignKey(
         Restaurant,
         related_name='menu_items',
-        verbose_name="ресторан",
+        verbose_name='ресторан',
         on_delete=models.CASCADE,
     )
     product = models.ForeignKey(
@@ -143,6 +143,74 @@ class OrderQuerySet(models.QuerySet):
             ),
         )
         return order_price
+
+    def get_available_restaurants_with_distance(self):
+        orders = self.prefetch_related('products_in_order')
+        for order in orders:
+            products_in_order = order.products_in_order.all()
+            available_restaurants = []
+            restaurants_with_distance = []
+
+            for product_in_order in products_in_order:
+                restaurants = []
+                restaurant_menu_items = RestaurantMenuItem.objects. \
+                    select_related('restaurant', 'product'). \
+                    filter(product=product_in_order.product)
+
+                for restaurant in restaurant_menu_items:
+                    restaurants.append(restaurant.restaurant)
+
+                if not available_restaurants:
+                    available_restaurants = set(restaurants)
+                else:
+                    available_restaurants = available_restaurants.intersection(
+                        set(restaurants)
+                    )
+                    if not available_restaurants:
+                        return None
+
+            for restaurant in available_restaurants:
+                try:
+                    restaurant_coordinates = Place.objects.get(
+                        address=restaurant.address
+                    )
+                except Place.DoesNotExist:
+                    rest_lon, rest_lat = fetch_coordinates(
+                        apikey=settings.YANDEX_API_KEY,
+                        address=restaurant.address,
+                    )
+                    restaurant_coordinates = Place.objects.create(
+                        address=restaurant.address,
+                        lat=rest_lat,
+                        lon=rest_lon
+                    )
+
+                try:
+                    client_coordinates = Place.objects.get(address=order.address)
+                except Place.DoesNotExist:
+                    client_lon, client_lat = fetch_coordinates(
+                        apikey=settings.YANDEX_API_KEY,
+                        address=order.address,
+                    )
+
+                    client_coordinates = Place.objects.create(
+                        address=order.address,
+                        lat=client_lat,
+                        lon=client_lon,
+                    )
+
+                delivery_distance = round(distance.distance(
+                    (restaurant_coordinates.lat, restaurant_coordinates.lon),
+                    (client_coordinates.lat, client_coordinates.lon),
+                ).km, 2)
+
+                restaurants_with_distance.append(
+                    (restaurant.name, delivery_distance)
+                )
+            order.restaurants = sorted(restaurants_with_distance,
+                                       key=itemgetter(1))
+
+        return orders
 
 
 class Order(models.Model):
@@ -227,70 +295,6 @@ class Order(models.Model):
     )
 
     objects = OrderQuerySet.as_manager()
-
-    def get_available_restaurants(self):
-        products = self.products_in_order.all()
-        available_restaurants = []
-
-        for product_in_order in products:
-            restaurants = []
-            restaurant_menu_items = RestaurantMenuItem.objects.\
-                select_related('restaurant', 'product').\
-                filter(product=product_in_order.product)
-
-            for restaurant in restaurant_menu_items:
-                restaurants.append(restaurant.restaurant)
-
-            if not available_restaurants:
-                available_restaurants = set(restaurants)
-            else:
-                available_restaurants = available_restaurants.intersection(
-                    set(restaurants)
-                )
-                if not available_restaurants:
-                    return None
-
-        restaurants_with_distance = []
-        for restaurant in available_restaurants:
-            try:
-                restaurant_coordinates = Place.objects.get(
-                    address=restaurant.address
-                )
-            except Place.DoesNotExist:
-                rest_lon, rest_lat = fetch_coordinates(
-                    apikey=settings.YANDEX_API_KEY,
-                    address=restaurant.address,
-                )
-                restaurant_coordinates = Place.objects.create(
-                    address=restaurant.address,
-                    lat=rest_lat,
-                    lon=rest_lon
-                )
-
-            try:
-                client_coordinates = Place.objects.get(address=self.address)
-            except Place.DoesNotExist:
-                client_lon, client_lat = fetch_coordinates(
-                    apikey=settings.YANDEX_API_KEY,
-                    address=self.address,
-                )
-
-                client_coordinates = Place.objects.create(
-                    address=self.address,
-                    lat=client_lat,
-                    lon=client_lon,
-                )
-
-            delivery_distance = round(distance.distance(
-                (restaurant_coordinates.lat, restaurant_coordinates.lon),
-                (client_coordinates.lat, client_coordinates.lon),
-            ).km, 2)
-
-            restaurants_with_distance.append(
-                (restaurant.name, delivery_distance)
-            )
-
-        return sorted(restaurants_with_distance, key=itemgetter(1))
 
     class Meta:
         verbose_name = 'заказ'
