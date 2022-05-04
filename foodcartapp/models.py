@@ -168,46 +168,58 @@ class OrderQuerySet(models.QuerySet):
                         return None
 
             for restaurant in available_restaurants:
-                try:
+                if Place.objects.filter(address=restaurant.address):
                     restaurant_coordinates = Place.objects.get(
                         address=restaurant.address
                     )
-                except Place.DoesNotExist:
-                    rest_lon, rest_lat = fetch_coordinates(
-                        apikey=settings.YANDEX_API_KEY,
-                        address=restaurant.address,
-                    )
-                    restaurant_coordinates = Place.objects.create(
-                        address=restaurant.address,
-                        lat=rest_lat,
-                        lon=rest_lon
-                    )
+                else:
+                    try:
+                        rest_lon, rest_lat = fetch_coordinates(
+                            apikey=settings.YANDEX_API_KEY,
+                            address=restaurant.address,
+                        )
 
-                try:
-                    client_coordinates = Place.objects.get(address=order.address)
-                except Place.DoesNotExist:
-                    client_lon, client_lat = fetch_coordinates(
-                        apikey=settings.YANDEX_API_KEY,
-                        address=order.address,
-                    )
+                        restaurant_coordinates = Place.objects.create(
+                            address=restaurant.address,
+                            lat=rest_lat,
+                            lon=rest_lon
+                        )
+                    except TypeError:
+                        restaurant_coordinates = None
 
-                    client_coordinates = Place.objects.create(
-                        address=order.address,
-                        lat=client_lat,
-                        lon=client_lon,
+                if Place.objects.filter(address=order.address):
+                    client_coordinates = Place.objects.get(
+                        address=order.address
                     )
+                else:
+                    try:
+                        client_lon, client_lat = fetch_coordinates(
+                            apikey=settings.YANDEX_API_KEY,
+                            address=order.address,
+                        )
 
-                delivery_distance = round(distance.distance(
-                    (restaurant_coordinates.lat, restaurant_coordinates.lon),
-                    (client_coordinates.lat, client_coordinates.lon),
-                ).km, 2)
+                        client_coordinates = Place.objects.create(
+                            address=order.address,
+                            lat=client_lat,
+                            lon=client_lon,
+                        )
+                    except TypeError:
+                        client_coordinates = None
+
+                if restaurant_coordinates is None or client_coordinates is None:
+                    delivery_distance = 'Адрес не определен'
+                else:
+                    delivery_distance = round(distance.distance(
+                        (restaurant_coordinates.lat, restaurant_coordinates.lon),
+                        (client_coordinates.lat, client_coordinates.lon),
+                    ).km, 2)
 
                 restaurants_with_distance.append(
                     (restaurant.name, delivery_distance)
                 )
+
             order.restaurants = sorted(restaurants_with_distance,
                                        key=itemgetter(1))
-
         return orders
 
 
@@ -231,7 +243,7 @@ class Order(models.Model):
     lastname = models.CharField(
         'фамилия клиента',
         max_length=200,
-        default='',
+        blank=True,
     )
 
     phonenumber = PhoneNumberField(
@@ -269,7 +281,7 @@ class Order(models.Model):
 
     comment = models.TextField(
         'комментарий к заказу',
-        default='',
+        blank=True,
     )
 
     order_time = models.DateTimeField(
