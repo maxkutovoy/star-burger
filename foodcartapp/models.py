@@ -145,27 +145,26 @@ class OrderQuerySet(models.QuerySet):
     def get_available_restaurants_with_distance(self):
         orders = self.prefetch_related('products_in_order')
         for order in orders:
-            products_in_order = order.products_in_order.all()
-            available_restaurants = []
-            restaurants_with_distance = []
-
-            for product_in_order in products_in_order:
-                restaurants = []
-                restaurant_menu_items = RestaurantMenuItem.objects. \
+            products_in_order = order.products_in_order.values('product')
+            restaurant_menu_items = RestaurantMenuItem.objects. \
                     select_related('restaurant', 'product'). \
-                    filter(product=product_in_order.product)
+                    filter(product__in=products_in_order). \
+                    filter(availability=True)
+            available_restaurants = set()
+            restaurants_with_distance = []
+            restaurants = []
 
-                for restaurant in restaurant_menu_items:
-                    restaurants.append(restaurant.restaurant)
+            for restaurant in restaurant_menu_items:
+                restaurants.append(restaurant.restaurant)
 
+            if not available_restaurants:
+                available_restaurants = set(restaurants)
+            else:
+                available_restaurants = available_restaurants.intersection(
+                    set(restaurants)
+                )
                 if not available_restaurants:
-                    available_restaurants = set(restaurants)
-                else:
-                    available_restaurants = available_restaurants.intersection(
-                        set(restaurants)
-                    )
-                    if not available_restaurants:
-                        return None
+                    return None
 
             for restaurant in available_restaurants:
                 if Place.objects.filter(address=restaurant.address):
