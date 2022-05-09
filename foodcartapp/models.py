@@ -167,43 +167,37 @@ class OrderQuerySet(models.QuerySet):
                     return None
 
             for restaurant in available_restaurants:
-                if Place.objects.filter(address=restaurant.address):
+                try:
                     restaurant_coordinates = Place.objects.get(
                         address=restaurant.address
                     )
-                else:
-                    try:
-                        rest_lon, rest_lat = fetch_coordinates(
-                            apikey=settings.YANDEX_API_KEY,
-                            address=restaurant.address,
-                        )
+                except Place.DoesNotExist:
+                    coordinates = fetch_coordinates(
+                        apikey=settings.YANDEX_API_KEY,
+                        address=restaurant.address,
+                    )
 
-                        restaurant_coordinates = Place.objects.create(
+                    restaurant_coordinates = Place.objects.create(
                             address=restaurant.address,
-                            lat=rest_lat,
-                            lon=rest_lon
-                        )
-                    except TypeError:
-                        restaurant_coordinates = None
+                            lon=coordinates[0],
+                            lat=coordinates[1],
+                        ) if coordinates else None
 
-                if Place.objects.filter(address=order.address):
+                try:
                     client_coordinates = Place.objects.get(
                         address=order.address
                     )
-                else:
-                    try:
-                        client_lon, client_lat = fetch_coordinates(
+                except Place.DoesNotExist:
+                    coordinates = fetch_coordinates(
                             apikey=settings.YANDEX_API_KEY,
                             address=order.address,
                         )
 
-                        client_coordinates = Place.objects.create(
-                            address=order.address,
-                            lat=client_lat,
-                            lon=client_lon,
-                        )
-                    except TypeError:
-                        client_coordinates = None
+                    client_coordinates = Place.objects.create(
+                        address=order.address,
+                        lon=coordinates[0],
+                        lat=coordinates[1],
+                    ) if coordinates else None
 
                 if restaurant_coordinates is None or client_coordinates is None:
                     delivery_distance = 'Адрес не определен'
