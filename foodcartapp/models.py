@@ -4,12 +4,10 @@ from django.db import models
 from django.db.models import Sum, F
 from django.core.validators import MinValueValidator
 from django.utils import timezone
-from geopy import distance
 from phonenumber_field.modelfields import PhoneNumberField
 
-from places.coordinates_utils import fetch_coordinates
+from places.coordinates_utils import calculate_delivery_distance
 from places.models import Place
-from django.conf import settings
 
 
 class Restaurant(models.Model):
@@ -142,7 +140,7 @@ class OrderQuerySet(models.QuerySet):
         )
         return order_price
 
-    def get_available_restaurants_with_distance(self):
+    def get_available_restaurants(self):
         orders = self.prefetch_related('products_in_order')
         for order in orders:
             products_in_order = order.products_in_order.values('product')
@@ -151,11 +149,10 @@ class OrderQuerySet(models.QuerySet):
                     filter(product__in=products_in_order). \
                     filter(availability=True)
             available_restaurants = set()
-            restaurants_with_distance = []
             restaurants = []
 
-            for restaurant in restaurant_menu_items:
-                restaurants.append(restaurant.restaurant)
+            for menu_item in restaurant_menu_items:
+                restaurants.append(menu_item.restaurant)
 
             if not available_restaurants:
                 available_restaurants = set(restaurants)
@@ -166,50 +163,7 @@ class OrderQuerySet(models.QuerySet):
                 if not available_restaurants:
                     return None
 
-            for restaurant in available_restaurants:
-                try:
-                    restaurant_coordinates = Place.objects.get(
-                        address=restaurant.address
-                    )
-                except Place.DoesNotExist:
-                    coordinates = fetch_coordinates(
-                        apikey=settings.YANDEX_API_KEY,
-                        address=restaurant.address,
-                    )
-
-                    restaurant_coordinates = Place.objects.create(
-                            address=restaurant.address,
-                            lon=coordinates[0],
-                            lat=coordinates[1],
-                        ) if coordinates else None
-
-                try:
-                    client_coordinates = Place.objects.get(
-                        address=order.address
-                    )
-                except Place.DoesNotExist:
-                    coordinates = fetch_coordinates(
-                            apikey=settings.YANDEX_API_KEY,
-                            address=order.address,
-                        )
-
-                    client_coordinates = Place.objects.create(
-                        address=order.address,
-                        lon=coordinates[0],
-                        lat=coordinates[1],
-                    ) if coordinates else None
-
-                if restaurant_coordinates is None or client_coordinates is None:
-                    delivery_distance = 'Адрес не определен'
-                else:
-                    delivery_distance = round(distance.distance(
-                        (restaurant_coordinates.lat, restaurant_coordinates.lon),
-                        (client_coordinates.lat, client_coordinates.lon),
-                    ).km, 2)
-
-                restaurants_with_distance.append(
-                    (restaurant.name, delivery_distance)
-                )
+            restaurants_with_distance = calculate_delivery_distance(order.address, available_restaurants)
 
             order.restaurants = sorted(restaurants_with_distance,
                                        key=itemgetter(1))
