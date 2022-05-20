@@ -149,10 +149,9 @@ class OrderQuerySet(models.QuerySet):
                     filter(product__in=products_in_order). \
                     filter(availability=True)
             available_restaurants = set()
-            restaurants = []
-
-            for menu_item in restaurant_menu_items:
-                restaurants.append(menu_item.restaurant)
+            restaurants = [
+                menu_item.restaurant for menu_item in restaurant_menu_items
+            ]
 
             if not available_restaurants:
                 available_restaurants = set(restaurants)
