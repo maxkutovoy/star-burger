@@ -100,5 +100,5 @@ def view_orders(request):
     return render(request, template_name='order_items.html', context={
         'order_items': Order.objects.filter(status='new_order')
             .calculate_order_price()
-            .get_available_restaurants_with_distance(),
+            .get_available_restaurants(),
     })
