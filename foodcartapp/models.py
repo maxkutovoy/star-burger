@@ -1,7 +1,7 @@
 from operator import itemgetter
 
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Prefetch
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
@@ -135,34 +135,33 @@ class OrderQuerySet(models.QuerySet):
     def calculate_order_price(self):
         order_price = self.annotate(
             total_order_price=Sum(
-                F('products_in_order__products_price'),
+                F('order_items__products_price'),
             ),
         )
         return order_price
 
     def get_available_restaurants(self):
-        orders = self.prefetch_related('products_in_order')
+        orders = self.prefetch_related('order_items__product')
         for order in orders:
-            products_in_order = order.products_in_order.values('product')
-            restaurant_menu_items = RestaurantMenuItem.objects. \
-                    select_related('restaurant', 'product'). \
-                    filter(product__in=products_in_order). \
-                    filter(availability=True)
             available_restaurants = set()
-            restaurants = [
-                menu_item.restaurant for menu_item in restaurant_menu_items
-            ]
-
-            if not available_restaurants:
-                available_restaurants = set(restaurants)
-            else:
-                available_restaurants = available_restaurants.intersection(
-                    set(restaurants)
-                )
+            products_in_order = order.order_items.prefetch_related('product__menu_items__restaurant')
+            for product in products_in_order:
                 if not available_restaurants:
-                    return None
+                    available_restaurants = set(
+                        menu_item.restaurant for menu_item in
+                        product.product.menu_items.all())
+                else:
+                    available_restaurants = available_restaurants.intersection(
+                        set(menu_item.restaurant for menu_item in
+                            product.product.menu_items.all())
+                    )
+                    if not available_restaurants:
+                        print('Ничего нет')
+                        return None
 
-            restaurants_with_distance = calculate_delivery_distance(order.address, available_restaurants)
+            places = Place.objects.all()
+            restaurants_with_distance = calculate_delivery_distance(places,
+                order.address, available_restaurants)
 
             order.restaurants = sorted(restaurants_with_distance,
                                        key=itemgetter(1))
@@ -264,7 +263,7 @@ class ProductInOrder(models.Model):
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
-        related_name='products_in_order',
+        related_name='order_items',
         verbose_name='заказ'
     )
 

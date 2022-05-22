@@ -23,11 +23,11 @@ def fetch_coordinates(apikey, address):
     return lon, lat
 
 
-def calculate_delivery_distance(start_point, end_points_list):
+def calculate_delivery_distance(places, start_point, end_points_list):
     points_with_distance = []
 
     try:
-        client_coordinates = Place.objects.get(
+        client_coordinates = places.get(
             address=start_point
         )
     except Place.DoesNotExist:
@@ -44,7 +44,7 @@ def calculate_delivery_distance(start_point, end_points_list):
 
     for point in end_points_list:
         try:
-            restaurant_coordinates = Place.objects.get(
+            restaurant_coordinates = places.get(
                 address=point.address
             )
         except Place.DoesNotExist:
