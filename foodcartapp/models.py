@@ -158,9 +158,7 @@ class OrderQuerySet(models.QuerySet):
                         set(menu_item.restaurant for menu_item in
                             product.product.menu_items.all())
                     )
-                    if not available_restaurants:
-                        print('Ничего нет')
-                        return None
+                    return available_restaurants
 
             restaurants_with_distance = calculate_delivery_distance(
                 places_query_set, order.address, list(available_restaurants))
