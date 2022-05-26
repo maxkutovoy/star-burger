@@ -148,15 +148,15 @@ class OrderQuerySet(models.QuerySet):
         for order in orders:
             available_restaurants = set()
             products_in_order = order.order_items.all()
-            for product in products_in_order:
+            for product_in_order in products_in_order:
                 if not available_restaurants:
                     available_restaurants = set(
                         menu_item.restaurant for menu_item in
-                        product.product.menu_items.all())
+                        product_in_order.product.menu_items.all())
                 else:
                     available_restaurants = available_restaurants.intersection(
                         set(menu_item.restaurant for menu_item in
-                            product.product.menu_items.all())
+                            product_in_order.product.menu_items.all())
                     )
                     return available_restaurants
 
