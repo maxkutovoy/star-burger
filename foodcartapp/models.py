@@ -143,7 +143,19 @@ class OrderQuerySet(models.QuerySet):
     def get_available_restaurants(self):
         orders = self.prefetch_related(
             'order_items__product__menu_items__restaurant')
-        places_query_set = Place.objects.all()
+        restaurants = Restaurant.objects.all()
+        order_addresses = orders.values_list('address', flat=True)
+        restaurant_addresses = restaurants.values_list('address', flat=True)
+        orders_places = Place.objects.filter(address__in=order_addresses)
+        restaurant_places = Place.objects.filter(
+            address__in=restaurant_addresses)
+        order_coordinates_by_addresses = {
+            place.address: (place.lat, place.lon) for place in orders_places
+        }
+        restaurant_coordinates_by_addresses = {
+            place.address: (place.lat, place.lon) for place
+            in restaurant_places
+        }
 
         for order in orders:
             available_restaurants = set()
@@ -154,14 +166,18 @@ class OrderQuerySet(models.QuerySet):
                         menu_item.restaurant for menu_item in
                         product_in_order.product.menu_items.all())
                 else:
+
                     available_restaurants = available_restaurants.intersection(
                         set(menu_item.restaurant for menu_item in
                             product_in_order.product.menu_items.all())
                     )
-                    return available_restaurants
 
             restaurants_with_distance = calculate_delivery_distance(
-                places_query_set, order.address, list(available_restaurants))
+                order_coordinates_by_addresses,
+                restaurant_coordinates_by_addresses,
+                order.address,
+                list(available_restaurants)
+            )
 
             order.restaurants = sorted(restaurants_with_distance,
                                        key=itemgetter(1))

@@ -13,62 +13,61 @@ def fetch_coordinates(apikey, address):
         "format": "json",
     })
     response.raise_for_status()
-    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+    found_places = response.json()['response']['GeoObjectCollection'][
+        'featureMember']
 
     if not found_places:
         return None
 
     most_relevant = found_places[0]
     lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lon, lat
+    return lat, lon
 
 
-def save_new_place_to_db(address):
-    coordinates = fetch_coordinates(
-        apikey=settings.YANDEX_API_KEY,
-        address=address,
-    )
-
+def save_new_place_to_db(address, coordinates):
     new_place = Place.objects.create(
         address=address,
-        lon=coordinates[0],
-        lat=coordinates[1],
+        lat=coordinates[0],
+        lon=coordinates[1],
     ) if coordinates else None
 
     return new_place
 
 
-def calculate_delivery_distance(places_query_set, start_point, end_points_list):
+def calculate_delivery_distance(order_coordinates_by_addresses,
+                                restaurant_coordinates_by_addresses,
+                                start_point, end_points):
     points_with_distance = []
-    end_points_addresses = [end_point.address for end_point in end_points_list]
-    client_coordinates = None
     restaurants = []
 
-    for place in places_query_set:
-        if start_point == place.address:
-            client_coordinates = place
+    if start_point in order_coordinates_by_addresses.keys():
+        order_coordinates = order_coordinates_by_addresses[start_point]
+    else:
+        order_coordinates = fetch_coordinates(
+            settings.YANDEX_API_KEY, start_point)
+        if order_coordinates:
+            save_new_place_to_db(start_point, order_coordinates)
 
-        if place.address in end_points_addresses:
-            for end_point in end_points_list:
-                if end_point.address == place.address:
-                    restaurants.append((end_point.name, place))
-                    end_points_list.remove(end_point)
+    for end_point in end_points:
+        if end_point.address in restaurant_coordinates_by_addresses.keys():
+            end_point_coordinates = restaurant_coordinates_by_addresses[
+                end_point.address]
+        else:
+            end_point_coordinates = fetch_coordinates(
+                settings.YANDEX_API_KEY, end_point.address)
+            if end_point_coordinates:
+                save_new_place_to_db(end_point.address, end_point_coordinates)
 
-    if not client_coordinates:
-        client_coordinates = save_new_place_to_db(start_point)
-
-    if end_points_list:
-        for end_point in end_points_list:
-            new_place = save_new_place_to_db(end_point.address)
-            restaurants.append((end_point.name, new_place))
+        restaurants.append((end_point.name, end_point_coordinates))
+        print(restaurants)
 
     for restaurant_name, coordinates in restaurants:
-        if coordinates is None or client_coordinates is None:
+        if order_coordinates is None or end_point_coordinates is None:
             delivery_distance = 'Адрес не определен'
         else:
             delivery_distance = round(distance.distance(
-                (coordinates.lat, coordinates.lon),
-                (client_coordinates.lat, client_coordinates.lon),
+                (end_point_coordinates[0], end_point_coordinates[1]),
+                (order_coordinates[0], order_coordinates[1]),
             ).km, 2)
 
         points_with_distance.append(
