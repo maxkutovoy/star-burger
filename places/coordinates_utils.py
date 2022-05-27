@@ -59,7 +59,6 @@ def calculate_delivery_distance(order_coordinates_by_addresses,
                 save_new_place_to_db(end_point.address, end_point_coordinates)
 
         restaurants.append((end_point.name, end_point_coordinates))
-        print(restaurants)
 
     for restaurant_name, coordinates in restaurants:
         if order_coordinates is None or end_point_coordinates is None:
