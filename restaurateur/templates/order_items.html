@@ -45,18 +45,22 @@
           <td>-</td>
         {% endif %}
 
+        {% if item.restaurant %}
+        <td>Доставит: {{ item.restaurant }}</td>
+        {% else %}
         <td>
           {% if item.restaurants %}
-          <details>
-            <summary>Развернуть</summary>
-            {% for restaurant in item.restaurants %}
-              <p>{{ restaurant.0 }} - {{ restaurant.1 }} км</p>
-            {% endfor %}
-          </details>
+            <details>
+              <summary>Могут доставить (показать)</summary>
+              {% for restaurant in item.restaurants %}
+                <p>{{ restaurant.0 }} - {{ restaurant.1 }} км</p>
+              {% endfor %}
+            </details>
           {% else %}
             Нет доступных ресторанов
           {% endif %}
         </td>
+        {% endif %}
 
         <td><a href="{% url 'admin:foodcartapp_order_change' object_id=item.pk %}?next={{ request.get_full_path|urlencode }}">Редактировать</a> </td>
 

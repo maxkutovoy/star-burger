@@ -222,6 +222,8 @@ class Order(models.Model):
         verbose_name='ресторан доставки',
         related_name='orders',
         on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
     )
 
     status = models.CharField(
