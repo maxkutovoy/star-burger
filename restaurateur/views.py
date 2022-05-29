@@ -99,6 +99,7 @@ def view_restaurants(request):
 def view_orders(request):
     return render(request, template_name='order_items.html', context={
         'order_items': Order.objects.filter(status='new_order')
+            .select_related('restaurant')
             .calculate_order_price()
             .get_available_restaurants(),
     })
