@@ -1,0 +1,11 @@
+[Unit]
+Description=Star-burger site
+
+[Service]
+Type=simple
+WorkingDirectory=/home/admin/star-burger
+ExecStart=gunicorn -w 3 -b 45.8.248.61:8000 star_burger.wsgi:application
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
