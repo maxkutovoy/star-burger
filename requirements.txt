@@ -10,4 +10,8 @@ django-filter==21.1
 requests==2.27.1
 geopy==2.2.0
 gunicorn==20.1.0
+rollbar==0.16.2
 psycopg2-binary==2.9.3
+
+
+
