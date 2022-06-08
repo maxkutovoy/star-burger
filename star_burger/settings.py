@@ -16,7 +16,7 @@ SECRET_KEY = env('SECRET_KEY', 'etirgvonenrfnoerngorenogneongg334g')
 DEBUG = env.bool('DEBUG', True)
 ROLLBAR_TOKEN = env('ROLLBAR_TOKEN')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['*'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1'])
 
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
