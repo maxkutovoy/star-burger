@@ -1,6 +1,11 @@
+# Project
 bundles/**
 node_modules/
 media/
+data.json
+log.txt
+star_burger/log.txt
+staticfiles/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
