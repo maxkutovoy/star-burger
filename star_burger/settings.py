@@ -31,7 +31,6 @@ INSTALLED_APPS = [
 
     'phonenumber_field',
     'rest_framework',
-    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -42,9 +41,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404',
 ]
+
+if DEBUG:
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
+    INSTALLED_APPS += [
+        'debug_toolbar',
+    ]
 
 ROOT_URLCONF = 'star_burger.urls'
 
