@@ -64,14 +64,9 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-Зарегистрируйтесь на сайте [Rollbar](https://rollbar.com/) для отслеживания ошибок.
-Создайте новое приложение в разделе `Projects` и скопируйте access_token.
-Ошибки будут отображаться в разделе `Items`. Ошибки тестовой версии сайта отображаются в разделе `ENVIRONMENTS - development`
-
-
 Создайте файл `.env` в корневом каталоге проекта и пропишите в нем ключ от API сервиса яндекса для определения координат по адресу. Получить ключ [можно здесь](https://developer.tech.yandex.ru/services/).
 - `YANDEX_API_KEY` — ключ от API сервиса яндекса для определения координат по адресу. Получить ключ [можно здесь](https://developer.tech.yandex.ru/services/).
-- `ROLLBAR_TOKEN` — access_token сайта [Rollbar](https://rollbar.com/). Который получили выше.
+
 - `DATABASE_URL` — данные для подключения PostgrSQL в формате
 `postgres://username:password@host:port/db_name`
   - `username` - имя пользователя. По умолчанию PostgreSQL создает пользователя `postgres`. Использовать данного пользователя не рекомендуется, лучше создать нового.
@@ -79,6 +74,16 @@ python manage.py migrate
   - `host` - адрес хоста, где расположена база данные по умолчанию `127.0.0.1` или `localhost`
   - `port` - порт через который работает БД. По умолчанию `5432`.
   - `db_name` - имя созданной БД.
+
+### Подключить сервис для отслеживания и сбора ошибок:
+
+Зарегистрируйтесь на сайте [Rollbar](https://rollbar.com/).
+Создайте новое приложение в разделе `Projects` и скопируйте access_token.
+Ошибки будут отображаться в разделе `Items`. Ошибки тестовой версии сайта отображаются в разделе `ENVIRONMENTS - development`
+
+Добавьте в файл `.env` настройки для Rollbar:
+- `ROLLBAR_ENABLE` — укажите значение `True` для активации Rollbar.
+- `ROLLBAR_TOKEN` — access_token сайта [Rollbar](https://rollbar.com/). Который получили при регистрации.
 
 Запустите сервер:
 
@@ -163,14 +168,21 @@ Parcel будет следить за файлами в каталоге `bundle
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте. Не стоит использовать значение по-умолчанию, **замените на своё**.
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `YANDEX_API_KEY` — ключ от API сервиса яндекса для определения координат по адресу. Получить ключ [можно здесь](https://developer.tech.yandex.ru/services/).
-- `ROLLBAR_TOKEN` — access_token сайта [Rollbar](https://rollbar.com/). Который получили выше.
-- `ROLLBAR_ENVIRONMENT` — название раздела для отображения ошибок на сайте [Rollbar](https://rollbar.com/). Например `prod`
-- `postgres://username:password@host:port/db_name` - настройки базы данных:
+- `DATABASE_URL` — данные для подключения PostgrSQL в формате:
+`postgres://username:password@host:port/db_name` где:
   - `username` - имя пользователя. По умолчанию PostgreSQL создает пользователя `postgres`. Использовать данного пользователя не рекомендуется, лучше создать нового.
   - `password` - пароль пользователя.
   - `host` - адрес хоста, где расположена база данных. По умолчанию `127.0.0.1` или `localhost`
   - `port` - порт через который работает БД. По умолчанию `5432`.
   - `db_name` - имя созданной БД.
+
+Для активации сервиса для отслеживания и сбора ошибок:
+Инструкция по регистрации выше.
+
+Добавьте в файл `.env` настройки для Rollbar:
+- `ROLLBAR_ENABLE` — укажите значение `True` для активации Rollbar.
+- `ROLLBAR_TOKEN` — access_token сайта [Rollbar](https://rollbar.com/). Который получили при регистрации.
+- `ROLLBAR_ENVIRONMENT` — название раздела для отображения ошибок на сайте [Rollbar](https://rollbar.com/). Например `prod`
 
 ## Быстрое обновление кода на сервере:
 Для быстрого обновления кода на сервере необходимо запустить в терминале скрипт `deploy_star_burger.sh`

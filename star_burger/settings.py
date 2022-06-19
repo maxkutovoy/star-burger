@@ -14,7 +14,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', True)
-ROLLBAR_TOKEN = env('ROLLBAR_TOKEN')
+
+if env.bool('ROLLBAR_ENABLE', False):
+    ROLLBAR = {
+        'access_token': env('ROLLBAR_TOKEN'),
+        'environment': env('ROLLBAR_ENVIRONMENT', 'development'),
+        'root': BASE_DIR,
+    }
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1'])
 
@@ -134,9 +140,3 @@ STATICFILES_DIRS = [
 ]
 
 YANDEX_API_KEY = env('YANDEX_API_KEY')
-
-ROLLBAR = {
-    'access_token': ROLLBAR_TOKEN,
-    'environment': env('ROLLBAR_ENVIRONMENT', 'development'),
-    'root': BASE_DIR,
-}
