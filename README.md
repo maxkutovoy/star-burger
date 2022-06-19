@@ -164,7 +164,7 @@ Parcel будет следить за файлами в каталоге `bundle
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `YANDEX_API_KEY` — ключ от API сервиса яндекса для определения координат по адресу. Получить ключ [можно здесь](https://developer.tech.yandex.ru/services/).
 - `ROLLBAR_TOKEN` — access_token сайта [Rollbar](https://rollbar.com/). Который получили выше.
-- `ENVIRONMENT` — название раздела для отображения ошибок на сайте [Rollbar](https://rollbar.com/). Например `prod`
+- `ROLLBAR_ENVIRONMENT` — название раздела для отображения ошибок на сайте [Rollbar](https://rollbar.com/). Например `prod`
 - `postgres://username:password@host:port/db_name` - настройки базы данных:
   - `username` - имя пользователя. По умолчанию PostgreSQL создает пользователя `postgres`. Использовать данного пользователя не рекомендуется, лучше создать нового.
   - `password` - пароль пользователя.
