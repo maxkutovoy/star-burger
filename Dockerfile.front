@@ -1,0 +1,13 @@
+FROM node:16-alpine3.14
+
+WORKDIR /app
+
+COPY ./assets ./assets
+COPY ./package.json .
+COPY ./package-lock.json .
+
+RUN npm ci --include=dev
+
+COPY ./bundles-src/ ./bundles-src/
+
+CMD ["./node_modules/.bin/parcel", "build", "./bundles-src/index.js", "--dist-dir", "bundles", "--public-url", "./"]
