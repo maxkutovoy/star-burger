@@ -1,0 +1,16 @@
+FROM python:3.9-slim
+
+RUN mkdir /app
+RUN mkdir /app/static
+RUN mkdir /app/media
+RUN mkdir /app/assets
+RUN mkdir /app/bundles
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1 \
+    PYTHONUNBUFFERED 1
+
+COPY . .
+
+RUN pip install --no-cache-dir --upgrade pip -r requirements.txt
