@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  backend:
+  web:
     build:
       context: .
       dockerfile: Dockerfile.back
@@ -9,13 +9,14 @@ services:
                     python manage.py migrate                                             &&
                     gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000"
     volumes:
-      - ./app:/app
-      - static_data:/app/staticfiles
-      - media_data:/app/media
+      - static_volume:/home/django-user/web/static
+      - media_volume:/home/django-user/web/media
     env_file:
       - ./.env
-    expose:
-      - 8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 8000:8000
     restart: always
 
   frontend:
@@ -28,15 +29,15 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     volumes:
-      - static_data:/app/staticfiles
-      - media_data:/app/media
+      - static_volume:/home/django-user/web/static
+      - media_volume:/home/django-user/web/media
     ports:
-      - "80:80"
+      - 80:80
     depends_on:
-      - backend
+      - web
       - frontend
     restart: always
 
 volumes:
-  static_data:
-  media_data:
+  static_volume:
+  media_volume:
