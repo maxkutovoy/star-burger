@@ -1,16 +1,41 @@
-FROM python:3.9-slim
+# pull official base image
+FROM python:3.9-alpine
 
-RUN mkdir /app
-RUN mkdir /app/static
-RUN mkdir /app/media
-RUN mkdir /app/assets
-RUN mkdir /app/bundles
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-WORKDIR /app
+# install psycopg2 dependencies
+RUN apk add postgresql-dev gcc python3-dev musl-dev zlib-dev jpeg-dev
 
-ENV PYTHONDONTWRITEBYTECODE 1 \
-    PYTHONUNBUFFERED 1
+# create directory for the django-user user
+RUN mkdir -p /home/admin
 
-COPY . .
+# create the django-user user
+RUN addgroup -S admin && adduser -S admin -G admin
 
-RUN pip install --no-cache-dir --upgrade pip -r requirements.txt
+# create the appropriate directories
+ENV HOME=/home/admin
+ENV APP_HOME=/home/admin/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/static
+RUN mkdir $APP_HOME/media
+RUN mkdir $APP_HOME/assets
+RUN mkdir $APP_HOME/bundles
+
+WORKDIR $APP_HOME
+
+# install dependencies
+COPY ./requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# copy project
+COPY . $APP_HOME
+COPY ./static/ ./static
+COPY ./media/ ./media
+# chown all the files to the app user
+RUN chown -R admin:admin $APP_HOME
+
+# change to the django-user user
+USER admin

@@ -1,4 +1,13 @@
-.idea
-.vscode
-venv
-bundles
+.editorconfig
+.idea/
+.parcel-cache/
+.vscode/
+venv/
+bundles/
+__pycache__/
+app/
+nginx/
+node_modules/
+*.sqlite3
+deploy_star_burger.sh
+log.txt
