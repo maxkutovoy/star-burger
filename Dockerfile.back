@@ -11,7 +11,7 @@ RUN apk add postgresql-dev gcc python3-dev musl-dev zlib-dev jpeg-dev
 # create directory for the django-user user
 RUN mkdir -p /home/admin
 
-# create the django-user user
+# create the admin user
 RUN addgroup -S admin && adduser -S admin -G admin
 
 # create the appropriate directories
@@ -25,7 +25,6 @@ RUN mkdir $APP_HOME/bundles
 
 WORKDIR $APP_HOME
 
-# install dependencies
 COPY ./requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
