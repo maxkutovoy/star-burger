@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.back
+    command: sh -c "python manage.py collectstatic --noinput                             &&
+                    python manage.py migrate                                             &&
+                    gunicorn star_burger.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - static_volume:/home/admin/web/static
+      - media_volume:/home/admin/web/media
+    env_file:
+      - ./.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 8000:8000
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.dev
+    volumes:
+      - static_volume:/home/admin/web/static
+      - media_volume:/home/admin/web/media
+    ports:
+      - 80:80
+    depends_on:
+      - django
+      - frontend
+    restart: always
+
+volumes:
+  static_volume:
+  media_volume:
