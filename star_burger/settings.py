@@ -22,7 +22,7 @@ if env.bool('ROLLBAR_ENABLE', False):
         'root': BASE_DIR,
     }
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['*'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
