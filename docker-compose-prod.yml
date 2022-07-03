@@ -27,7 +27,7 @@ services:
   nginx:
     build:
       context: ./nginx
-      dockerfile: Dockerfile_prod
+      dockerfile: Dockerfile.prod
     volumes:
       - static_volume:/home/admin/web/static
       - media_volume:/home/admin/web/media
