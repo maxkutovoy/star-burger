@@ -1,11 +1,5 @@
 FROM nginx:1.21-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf
-RUN mkdir -p /etc/letsencrypt/live/maxtestsite.ml/
-
-COPY /etc/letsencrypt/live/maxtestsite.ml/fullchain.pem /etc/letsencrypt/live/maxtestsite.ml/fullchain.pem
-COPY /etc/letsencrypt/live/maxtestsite.ml/privkey.pem /etc/letsencrypt/live/maxtestsite.ml/privkey.pem
-COPY /etc/letsencrypt/options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
-COPY /etc/letsencrypt/ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
 
 COPY nginx_prod.conf /etc/nginx/conf.d/

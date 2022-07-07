@@ -15,8 +15,8 @@ services:
       - ./.env
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - 8000:8000
+    expose:
+      - 8000
     restart: always
 
   frontend:
