@@ -28,9 +28,10 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile.prod
+    container_name: nginx
     volumes:
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
       - static_volume:/home/admin/web/static
       - media_volume:/home/admin/web/media
     ports:
@@ -39,18 +40,21 @@ services:
     depends_on:
       - django
       - frontend
-    restart: always
+    restart: unless-stopped
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
   certbot:
     image: certbot/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    container_name: certbot
+    restart: unless-stopped
+    # command: certonly --webroot -w /var/www/certbot --email maxkutovoy@yandex.ru --agree-tos --no-eff-email --staging -d maxtestsite.ml -d www.maxtestsite.ml
+    # entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     volumes:
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
     depends_on:
       - nginx
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   static_volume:
   media_volume:
-  certbot_conf:
-  certbot_www:
