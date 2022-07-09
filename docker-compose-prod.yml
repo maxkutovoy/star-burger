@@ -15,8 +15,8 @@ services:
       - ./.env
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - 8000:8000
+    expose:
+      - 8000
     restart: always
 
   frontend:
@@ -46,8 +46,6 @@ services:
     image: certbot/certbot
     container_name: certbot
     restart: unless-stopped
-    # command: certonly --webroot -w /var/www/certbot --email maxkutovoy@yandex.ru --agree-tos --no-eff-email --staging -d maxtestsite.ml -d www.maxtestsite.ml
-    # entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
