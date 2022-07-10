@@ -44,6 +44,7 @@ services:
       - django
       - frontend
     restart: unless-stopped
+
   certbot:
     image: certbot/certbot
     container_name: certbot
