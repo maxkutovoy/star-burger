@@ -29,10 +29,13 @@ services:
       context: ./nginx
       dockerfile: Dockerfile.dev
     volumes:
+      - ./nginx/templates_dev/:/etc/nginx/templates
       - static_volume:/home/admin/web/static
       - media_volume:/home/admin/web/media
+    env_file:
+      - ./.env
     ports:
-      - 80:80
+      - "80:80"
     depends_on:
       - django
       - frontend

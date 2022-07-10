@@ -3,7 +3,7 @@ upstream starburger {
 }
 
 server {
-	server_name maxtestsite.ml www.maxtestsite.ml;
+	server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
 
 	location / {
 		proxy_pass http://starburger;
@@ -22,19 +22,19 @@ server {
 	}
 
 	listen 443 ssl;
-	ssl_certificate /etc/letsencrypt/live/maxtestsite.ml/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/maxtestsite.ml/privkey.pem;
+	ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
 	include /etc/letsencrypt/options-ssl-nginx.conf;
 	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 server {
-	if ($host = www.maxtestsite.ml) {
+	if ($host = www.${DOMAIN_NAME}) {
 		return 301 https://$host$request_uri;
 	}
 	# managed by Certbot
 
-	if ($host = maxtestsite.ml) {
+	if ($host = ${DOMAIN_NAME}) {
 		return 301 https://$host$request_uri;
 	}
 	# managed by Certbot
