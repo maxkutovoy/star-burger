@@ -3,11 +3,34 @@ upstream starburger {
 }
 
 server {
+	listen 80;
 	server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
 
 	location / {
-		proxy_pass http://starburger;
+		return 301 https://$host$request_uri; # redirect all non https requests to https
+		# proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # proxy_set_header Host $host;
+        # proxy_redirect off;
 	}
+
+	location /.well-known/acme-challenge/ {
+		alias /var/www/certbot;
+	}
+}
+
+server {
+    # new server, but for ssl (443 port)
+	listen 443 ssl; # listen 443 port
+	server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
+
+	include /etc/letsencrypt/options-ssl-nginx.conf;
+	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+	ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
+
+	location / {
+    	proxy_pass http://starburger;
+    }
 
 	location /media/ {
 		alias /home/admin/web/media/;
@@ -16,26 +39,50 @@ server {
 	location /static/ {
 		alias /home/admin/web/static/;
 	}
-
-	location /.well-known/acme-challenge/ {
-		alias /var/www/certbot;
-	}
-
-	listen 443 ssl;
-	ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
-	include /etc/letsencrypt/options-ssl-nginx.conf;
-	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
-server {
-	if ($host = www.${DOMAIN_NAME}) {
-		return 301 https://$host$request_uri;
-	}
-	# managed by Certbot
 
-	if ($host = ${DOMAIN_NAME}) {
-		return 301 https://$host$request_uri;
-	}
-	# managed by Certbot
-}
+
+# upstream starburger {
+# 	server django:8000;
+# }
+#
+# server {
+#
+#
+# 	server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
+#
+# 	location / {
+# 		proxy_pass http://starburger;
+# 	}
+#
+# 	location /media/ {
+# 		alias /home/admin/web/media/;
+# 	}
+#
+# 	location /static/ {
+# 		alias /home/admin/web/static/;
+# 	}
+#
+# 	location /.well-known/acme-challenge/ {
+# 		alias /var/www/certbot;
+# 	}
+#
+# 	listen 443 ssl;
+# 	ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+# 	ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
+# 	include /etc/letsencrypt/options-ssl-nginx.conf;
+# 	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+# }
+#
+# server {
+# 	if ($host = www.${DOMAIN_NAME}) {
+# 		return 301 https://$host$request_uri;
+# 	}
+# 	# managed by Certbot
+#
+# 	if ($host = ${DOMAIN_NAME}) {
+# 		return 301 https://$host$request_uri;
+# 	}
+# 	# managed by Certbot
+# }
